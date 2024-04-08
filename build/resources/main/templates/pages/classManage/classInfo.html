@@ -1,0 +1,517 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout_common}">
+
+<!--현재 페이지에서 쓰이는 스크립트-->
+<th:block layout:fragment="script">
+  <!-- Ekko Lightbox -->
+  <script src="/plugins/ekko-lightbox/ekko-lightbox.min.js"></script>
+  <!-- Filterizr-->
+  <script src="/plugins/filterizr/jquery.filterizr.min.js"></script>
+  <!-- Select2 -->
+  <script src="/plugins/select2/js/select2.full.min.js"></script>
+  <!-- SweetAlert2 -->
+  <script src="/plugins/sweetalert2/sweetalert2.min.js"></script>
+  <!-- Toastr -->
+  <script src="/plugins/toastr/toastr.min.js"></script>
+
+  <!--  컴포넌트의 동작에 필요한 인라인 스크립트-->
+  <script th:inline="javascript">
+    //document 로딩 시 실행
+    $(function(){
+      //이미지 클릭시 파일 업로드 창 자동 클릭
+      $("#profileImg").click(function(){
+        $('#imgUpload').click();
+      });
+      //파일이 변경되면 바로 미리보기 적용
+      $('#imgUpload').change(function(event) {
+        var file = event.target.files[0];
+        if(!isImageFile(file)) {
+          return;
+        }
+        var reader = new FileReader();
+        //미리보기 적용
+        reader.onload = function(e) {
+          $("#profileImg").attr("src", e.target.result);
+        }
+        reader.readAsDataURL(file);
+        //이미지 적용 버튼 보이기
+        $('#imgBtn').css('display', 'block');
+      });
+      //A,B반 자리 배치 Card 뿌리기
+      getClassCard("A");
+      getClassCard("B");
+      //클릭 이벤트나 다양한 컴포넌트에 걸리는 이벤트 초기화
+      setInit();
+    });
+    function setInit() {
+      //이미지 클릭시 디테일 뷰 모달
+      $(".background-wrap").on("click", function() {
+        //자리 그리드에 심어진 학생 아이디
+        var id = $(this).children().children().data('sid');
+        //공석 클릭시 모달 x
+        if(id != null) {
+          //모달은 하나만 쓰므로 초기화 - 디테일뷰에 들어가는 내용 공백으로
+          initModal();
+          //해당 학생에 대한 정보로 채우기 - ajax
+          infoModal(id);
+          //이름 태그에 가져온 id심기 + 이미지 폼 초기화
+          $('#Mname').data("sid", id);
+          $('#imgBtn').css('display', 'none');
+          $('#imgUpload').val(null);
+          //모달 오픈
+          $('#galleryModal').modal();
+        }
+      })
+      //A반 자리 배치 편집버튼 누르면 동작
+      $('#editSeatsA').click(function(){
+        //편집 버튼을 저장 버튼으로 교체
+        $('#editSeatsA').css('display', 'none');
+        $('#saveSeatsA').css('display', 'block');
+        //A반 편집 카드가 등장할 것이므로 B반 카드 안보이게
+        $('#bCard').css('display', 'none');
+        //edit Board 열기
+        showEdit(32, "A");
+      });
+      //A반 동작과 동일
+      $('#editSeatsB').click(function(){
+        $('#editSeatsB').css('display', 'none');
+        $('#saveSeatsB').css('display', 'block');
+        $('#aCard').css('display', 'none');
+        //edit Board 열기
+        showEdit(24, "B");
+      });
+      //저장 버튼 클릭 시 동작
+      $('#saveSeatsA').click(function() {
+        var studentSeats = []
+        //각 드롭다운 폼에 선택된 데이터를 SeatDto형식에 맞추어 리스트화
+        $('.select2bs4 option:selected').each((index, item) => {
+          studentSeats.push({
+            "seatId" : index+1,
+            "classAB" : 'A',
+            "studentId" : item.value,
+            "name" : item.text,
+          });
+        });
+        //리스트를 updateSeat함수에 전달
+        updateSeat(studentSeats);
+        //Edit Board 닫기
+        closeEdit();
+        //update ajax는 동기화된 동작 - 끝나면 A반 카드 다시 뿌리기
+        getClassCard("A");
+        //edit board 닫고 B반 카드 다시 보이기
+        $('#editSeatsA').css('display', 'block');
+        $('#saveSeatsA').css('display', 'none');
+        $('#bCard').css('display', 'block');
+      });
+      //A반과 동작 동일
+      $('#saveSeatsB').click(function() {
+        var studentSeats = [];
+        $('.select2bs4 option:selected').each((index, item) => {
+          studentSeats.push({
+            "seatId" : index+1,
+            "classAB" : 'B',
+            "studentId" : item.value,
+            "name" : item.text,
+          });
+        });
+        updateSeat(studentSeats);
+        closeEdit();
+        getClassCard("B");
+        $('#editSeatsB').css('display', 'block');
+        $('#saveSeatsB').css('display', 'none');
+        $('#aCard').css('display', 'block');
+      });
+    }
+    function initEdit(size, classab) {
+      let seatAB = 'span#seat'+classab+'-';
+      for(var j=1; j<=size; j++) {
+        var seats = seatAB + j;
+        $(seats).text(j);
+      }
+    }
+    //모달 초기화 함수
+    function initModal() {
+      $('#Mname').text('');
+      $('#Mbirth').text('');
+      $('#Mphone').text('');
+      $('#Memail').text('');
+      $('#Mresidence').text('');
+      $('#Mbelong').text('');
+      $('#Mmajor').text('');
+      $('#Mgraduate').text('');
+      $('#Mstart').text('');
+      $('#Mnote').text('');
+    }
+    //학생 그리드 클릭시 해당 학생에 맞춘 정보로 다시 초기화
+    function infoModal(id) {
+      var url = "/class/detail/" + id;
+      $.ajax({
+        url: url,
+        type: "GET",
+        dataType : "json",
+        cache   : false,
+        success  : function(data){
+          var source = '/class/profileImg/'+id;
+          $('#profileImg').attr('src', source);
+          $('#Mname').text(' ' + data.student.name);
+          $('#Mbirth').text(' ' + data.student.birth);
+          $('#Mphone').text('' + data.student.phone);
+          $('#Memail').text(' ' + data.student.email);
+          $('#Mresidence').text(' ' + data.student.residence);
+          $('#Mbelong').text(' ' + data.student.belong);
+          $('#Mmajor').text(' ' + data.student.major);
+          $('#Mgraduate').text(' ' + data.student.graduate);
+          $('#Mstart').text(' ' + data.student.start);
+          $('#Mnote').text(' ' + data.student.note);
+        },
+        error : function(jqXHR){
+          if(jqXHR.status == '401'){
+            alert('로그인 후 이용해주세요');
+            location.replace('/member/login');
+          } else if(jqXHR.status == '403'){
+            alert('해당 권한이 없습니다.');
+            location.replace('/');
+          } else {
+            alert(jqXHR.responseText);
+          }
+        }
+      });
+    }
+    //이미지 파일 서버로 전송
+    function upload() {
+      const imgUpload = $('#imgUpload')[0];
+      if(imgUpload.files.length === 0) {
+        alert("파일을 선택해주세요");
+        return;
+      }
+      const formData = new FormData();
+      formData.append("img", imgUpload.files[0]);
+      var id = $('#Mname').data("sid");
+      $.ajax({
+        type: 'POST',
+        url: '/class/profileImg/' + id,
+        enctype: 'multipart/form-data',
+        cache: false,
+        processData: false,
+        contentType: false,
+        data: formData,
+        success: function(result) {
+          var source = '/class/profileImg/'+id;
+          $('#profileImg').attr('src', source);
+          $('#imgBtn').css('display', 'none');
+          toastInfo('success', '이미지가 적용되었습니다');
+        },
+        error : function(jqXHR){
+          if(jqXHR.status == '401'){
+            alert('로그인 후 이용해주세요');
+            location.replace('/member/login');
+          } else if(jqXHR.status == '403'){
+            alert('해당 권한이 없습니다.');
+            location.replace('/');
+          } else {
+            alert(jqXHR.responseText);
+          }
+        }
+      })
+    }
+    //선택된 seat데이터 서버로 전송
+    function updateSeat(studentSeats) {
+      $.ajax({
+        contentType: 'application/json;charset=UTF-8',
+        type: "PATCH",
+        //비동기 false - 동기화된 전송 - 해당 전송 및 처리가 끝나야 다음 동작 수행
+        async: false,
+        url: "/class/update",
+        data: JSON.stringify(studentSeats),
+        dataType: "json",
+        cache   : false,
+        success: function () {
+          setSeats(); // 처리가 완료되면 자리 다시 뿌리기
+          toastInfo('success', '자리 배치가 변경되었습니다');
+        },
+        error : function(jqXHR){
+          if(jqXHR.status == '401'){
+            alert('로그인 후 이용해주세요');
+            location.replace('/member/login');
+          } else if(jqXHR.status == '403'){
+            alert('해당 권한이 없습니다.');
+            location.replace('/');
+          } else {
+            alert(jqXHR.responseText);
+          }
+        }
+      });
+    }
+    //각 반의 자리 배치 카드를 가져옴
+    function getClassCard(classab) {
+      var url = "/class/info/" + classab;
+      $.ajax({
+        url: url,
+        type: "GET",
+        async: false,
+        dataType : "html",
+        cache   : false,
+        success  : function(data){
+          if(classab==="A") {
+            $('#aCard').children().remove();
+            $('#aCard').append(data);
+          }else if(classab==="B") {
+            $('#bCard').children().remove();
+            $('#bCard').append(data);
+          }
+          setSeats();
+          setInit();
+        },
+        error : function(jqXHR){
+          if(jqXHR.status == '401'){
+            alert('로그인 후 이용해주세요');
+            location.replace('/member/login');
+          } else if(jqXHR.status == '403'){
+            alert('해당 권한이 없습니다.');
+            location.replace('/');
+          } else {
+            alert(jqXHR.responseText);
+          }
+        }
+      });
+    }
+    //edit Board 보이기
+    function showEdit(size, classab) {
+      var url = "/class/edit/" + classab;
+      $.ajax({
+        url: url,
+        type: "GET",
+        async: false,
+        dataType : "html",
+        cache   : false,
+        success  : function(data){
+          $('#editCard').children().remove();
+          $('#editCard').append(data);
+          $('#editCard').css('display', 'block');
+          initEdit(size, classab);
+          setSeats();
+          initselect2(classab);
+          $('#initBtn').click(function() {
+            showEdit(size, classab);
+          });
+        },
+        error : function(jqXHR){
+          if(jqXHR.status == '401'){
+            alert('로그인 후 이용해주세요');
+            location.replace('/member/login');
+          } else if(jqXHR.status == '403'){
+            alert('해당 권한이 없습니다.');
+            location.replace('/');
+          } else {
+            alert(jqXHR.responseText);
+          }
+        }
+      });
+    }
+    function closeEdit() {
+      $('#editCard').children().remove();
+      $('#editCard').css('display', 'none');
+    }
+    // 드롭다운 초기화
+    function initselect2(classab) {
+      $('.select2bs4').select2({
+        theme: 'bootstrap4',
+      })
+
+      //자리 배치시 이미 선택된 옵션은 disable
+      $('.select2bs4').change(function() {
+        var selected = $(this).children("option:selected").val();
+        var select2Id = $(this).data('id');
+        $('.select2bs4').find("option[value='"+selected+"']").prop("disabled", true);
+        var seats = 'span#seats' + classab + '-' + select2Id;
+        $(seats).text($(this).children("option:selected").text());
+        $(seats).css('color', 'gray');
+      });
+    }
+    // 이미지파일인지 확인
+    function isImageFile(file) {
+      var ext = file.name.split(".").pop().toLowerCase(); // 파일명에서 확장자를 가져온다.
+      return ($.inArray(ext, ["jpg", "jpeg", "gif", "png"]) === -1) ? false : true;
+    }
+    //각 반 카드를 가져온 후 자리배치 정보를 가져와 세팅
+    function setSeats() {
+      $.ajax({
+        url: "/class/seats",
+        type: "POST",
+        dataType: "json",
+        async: false,
+        cache: false,
+        success: function(result) {
+          let seatA = 'span#seatA-';
+          let seatB = 'span#seatB-';
+          var dataA = result.dataA;
+          var dataB = result.dataB;
+          $.each(dataA, function (index, item) {
+            var seats = seatA + item.seatId;
+            $(seats).text(item.name);
+            $(seats).css("color", "black");
+            $(seats).data("sid", item.studentId);
+          });
+          $.each(dataB, function (index, item) {
+            var seats = seatB + item.seatId;
+            $(seats).text(item.name);
+            $(seats).css("color", "black");
+            $(seats).data("sid", item.studentId);
+          });
+        },
+        error : function(jqXHR){
+          if(jqXHR.status == '401'){
+            alert('로그인 후 이용해주세요');
+            location.replace('/member/login');
+          } else if(jqXHR.status == '403'){
+            alert('해당 권한이 없습니다.');
+            location.replace('/');
+          } else {
+            alert(jqXHR.responseText);
+          }
+        }
+      })
+    };
+    function toastInfo(icon, title) {
+      Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+      }).fire({
+        icon: icon,
+        title: title,
+      })
+    }
+  </script>
+</th:block>
+
+<!--현재 페이지에서 쓰이는 스타일시트-->
+<th:block layout:fragment="css">
+  <!-- Ekko Lightbox -->
+  <link rel="stylesheet" href="/plugins/ekko-lightbox/ekko-lightbox.css">
+  <!-- Select2 -->
+  <link rel="stylesheet" href="/plugins/select2/css/select2.min.css">
+  <link rel="stylesheet" href="/plugins/select2-bootstrap4-theme/select2-bootstrap4.min.css">
+  <!-- SweetAlert2 -->
+  <link rel="stylesheet" href="/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
+  <!-- Toastr -->
+  <link rel="stylesheet" href="/plugins/toastr/toastr.min.css">
+
+  <!--  컴포넌트의 동작에 필요한 인라인 css-->
+  <style th:inline="css">
+    .select2-container .select2-dropdown .select2-results ul .select2-results__option[aria-disabled] {
+      /*background-color: #cccccc;*/
+      opacity: 0.5;
+    }
+    .background-wrap:hover {
+      background-image: url('/dist/img/seatHover.png');
+    }
+    .background-wrap {
+      background-image: url('/dist/img/seatDefault.png');
+      width: 100px;
+      height: 100px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: auto;
+    }
+    .content {
+      display: flex;
+      flex-direction: column;
+    }
+    .content span {
+      color: gray;
+    }
+    .content span:nth-child(1) {
+      font-size: 15px;
+      font-weight: bold;
+    }
+    #uploadForm {
+      display: none;
+    }
+    #imgBtn {
+      display: none;
+    }
+  </style>
+</th:block>
+
+<th:block layout:fragment="content">
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>자리배치도</h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="#">홈</a></li>
+              <li class="breadcrumb-item active">강의실 자리배치도</li>
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <!-- A반 자리 카드 -->
+          <div class="col-md-6" id="aCard"></div>
+          <!-- 자리편집 학생 리스트 display : none<->block -->
+          <div class="col-md-6" id="editCard" style="display: none"></div>
+          <!-- B반 자리 카드 -->
+          <div class="col-md-6" id="bCard"></div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+    <!-- /.content -->
+  </div>
+  <!-- /.content-wrapper -->
+  <div id="galleryModal" class="modal fade" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3 class="text-center mb-0 text-muted"><b id="Mname"></b></h3>
+          <button type="button" class="close float-right" aria-label="Close" data-dismiss="modal">
+            <span aria-hidden="true">&#xD7;</span>
+          </button>
+        </div>
+        <div class="modal-body text-center bg-alt p-5">
+          <div class="row">
+            <div class="col-5 text-center align-self-center">
+              <form id="uploadForm" enctype="multipart/form-data">
+                <input id="imgUpload" type="file" name="img">
+              </form>
+              <div class="row justify-content-center">
+                <img id="profileImg" style="object-fit: cover" src="/dist/img/gray.png" alt="사진" class="shadow-sm img-fluid mb-3">
+              </div>
+              <div class="row justify-content-center">
+                <button id="imgBtn" class="btn btn-info btn-sm float-rRFight" onclick="upload()">이미지 저장</button>
+              </div>
+            </div>
+            <div class="col-7">
+              <p><b>생년월일 &nbsp;</b><span class="text-muted text-sm" id="Mbirth"></span></p>
+              <p><span><i class="fas fa-lg fa-phone"></i>&nbsp;</span><span class="text-muted text-sm" id="Mphone"></span></p>
+              <p><span><i class="fas fa-envelope"></i>&nbsp;</span><span class="text-muted text-sm" id="Memail"></span></p>
+              <p><b>거주지 &nbsp;</b><span class="text-muted text-sm" id="Mresidence"></span></p>
+              <p><b>소속 &nbsp;</b><span class="text-muted text-sm" id="Mbelong"></span></p>
+              <p><b>전공 &nbsp;</b><span class="text-muted text-sm" id="Mmajor"></span></p>
+              <p><b>최종 학력 &nbsp;</b><span class="text-muted text-sm" id="Mgraduate"></span></p>
+              <p><b>수강시작일 &nbsp;</b><span class="text-muted text-sm" id="Mstart"></span></p>
+              <p><b>특이사항 &nbsp;</b><span class="text-muted text-sm" id="Mnote"></span></p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</th:block>
+</html>

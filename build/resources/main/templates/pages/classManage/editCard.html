@@ -1,0 +1,35 @@
+<div class="card card-dafault">
+  <div class="card-header">
+    <h4 class="card-title">Edit Board</h4>
+    <button class="btn btn-secondary btn-sm float-right" id="initBtn">초기화</button>
+  </div>
+  <div class="card-body">
+    <div th:if="${class=='A'}" class="form-group" th:each="num : ${#numbers.sequence(1,32)}">
+      <div class="row mb-2">
+        <div class="col-sm-2 d-flex justify-content-center">
+          <label class="m-auto" th:text="${num}"></label>
+        </div>
+        <div class="col-sm-10">
+          <select class="form-control select2bs4" th:data-id="${num}" style="width: 100%;">
+            <option value="" selected disabled>-선택하세요-</option>
+            <option th:each="student : ${students}" th:text="${student.name}" th:value="${student.id}"></option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <div th:if="${class=='B'}" class="form-group" th:each="num : ${#numbers.sequence(1,24)}">
+      <div class="row mb-2">
+        <div class="col-sm-2 d-flex justify-content-center">
+          <label class="m-auto" th:text="${num}"></label>
+        </div>
+        <div class="col-sm-10">
+          <select class="form-control select2bs4" th:data-id="${num}" style="width: 100%;">
+            <option value="" selected disabled>-선택하세요-</option>
+            <option th:each="student : ${students}" th:text="${student.name}" th:value="${student.id}"></option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

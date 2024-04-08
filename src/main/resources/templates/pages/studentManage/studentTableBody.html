@@ -1,0 +1,47 @@
+<table id="example1" class="table table-bordered table-striped table-hover">
+  <thead>
+  <tr>
+    <th class="text-center">성명</th>
+    <th>생년월일</th>
+    <th>연락처</th>
+    <th>구분</th>
+    <th>거주지</th>
+    <th>소속</th>
+    <th>전공</th>
+    <th>이메일</th>
+    <th>비고</th>
+  </tr>
+  </thead>
+  <tbody>
+  <tr th:each="student : ${studentDtoList}" >
+    <td class="text-center">
+      <button type="button" class="float-left updateBtn" style="border: none; display: none; background-color: transparent;">
+        <span th:data-id="${student.id}" onclick="updateModal(this)"><i class="fas fa-pen"></i></span></button>
+      <button type="button" class="float-right deleteBtn" style="border: none; display: none; background-color: transparent;">
+        <span th:data-id="${student.id}" onclick="deleteStudent(this)"><i class="fas fa-trash-alt"></i></span></button>
+      <span th:text="${student.name}"></span>
+    </td>
+    <td><span th:text="${student.birth}"></span></td>
+    <td><span th:text="${student.phone}"></span></td>
+    <td><span th:text="${student.classAB}"></span></td>
+    <td><span th:text="${student.residence}"></span></td>
+    <td><span th:text="${student.belong}"></span></td>
+    <td><span th:text="${student.major}"></span></td>
+    <td><span th:text="${student.email}"></span></td>
+    <td><span th:text="${student.note}"></span></td>
+  </tr>
+  </tbody>
+  <tfoot>
+  <tr>
+    <th class="text-center">성명</th>
+    <th>생년월일</th>
+    <th>연락처</th>
+    <th>구분</th>
+    <th>거주지</th>
+    <th>소속</th>
+    <th>전공</th>
+    <th>이메일</th>
+    <th>비고</th>
+  </tr>
+  </tfoot>
+</table>

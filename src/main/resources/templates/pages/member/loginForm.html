@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <title>CodehowsSMP | 로그인</title>
+        <!-- Google Font: Source Sans Pro -->
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+        <!-- Font Awesome -->
+        <link rel="stylesheet" href="/plugins/fontawesome-free/css/all.min.css">
+        <!-- icheck bootstrap -->
+        <link rel="stylesheet" href="/plugins/icheck-bootstrap/icheck-bootstrap.min.css">
+        <!-- Theme style -->
+        <link rel="stylesheet" href="/dist/css/adminlte.min.css">
+    </head>
+    <body class="hold-transition login-page">
+        <div class="login-box">
+            <div class="login-logo">
+                <b>CODEHOWS </b>SMP
+            </div>
+            <!-- /.login-logo -->
+            <div class="card">
+                <form role="form" id="loginForm" action="/member/login" method="post">
+                    <div class="card-body login-card-body">
+                        <p class="login-box-msg">서비스 시작을 위해 로그인 하십시오</p>
+                        <div class="input-group mb-3">
+                            <input type="text" name="email" class="form-control" placeholder="Email">
+                            <div class="input-group-append">
+                                <div class="input-group-text">
+                                    <span class="fas fa-envelope"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="input-group mb-3">
+                            <input type="password" name="password" class="form-control" placeholder="Password">
+                            <div class="input-group-append">
+                                <div class="input-group-text">
+                                    <span class="fas fa-lock"></span>
+                                </div>
+                            </div>
+                        </div>
+                        <p th:if="${#strings.equals(error, true)}" th:text="${exception}" style="color: #bd2130;"></p>
+                        <div class="row">
+                            <div class="col-12">
+                                <button class="btn btn-primary btn-block">로그인</button>
+                            </div>
+                            <!-- /.col -->
+                        </div>
+<!--                        카카오톡 로그인-->
+<!--                        <div class="social-auth-links text-center mb-3">-->
+<!--                            <p>- OR -</p>-->
+<!--                            <a href="/oauth2/authorization/kakao">-->
+<!--                                <img src = "https://developers.kakao.com/tool/resource/static/img/button/login/full/ko/kakao_login_medium_narrow.png">-->
+<!--                            </a>-->
+<!--                        </div>-->
+                    </div>
+                    <!-- /.login-card-body -->
+                    <div class="card-footer">
+                        <p class="mb-0">
+                            <a href="/member/new" class="text-center">계정이 없으신가요? (회원가입)</a>
+                        </p>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- /.login-box -->
+
+        <!-- jQuery -->
+        <script src="/plugins/jquery/jquery.min.js"></script>
+        <!-- Bootstrap 4 -->
+        <script src="/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+        <!-- AdminLTE App -->
+        <script src="/dist/js/adminlte.min.js"></script>
+        <!-- jquery-validation -->
+        <script src="/plugins/jquery-validation/jquery.validate.min.js"></script>
+        <script src="/plugins/jquery-validation/additional-methods.min.js"></script>
+        <script>
+            $(function () {
+                $.validator.setDefaults({
+                });
+                //validation
+                $('#loginForm').validate({
+                    rules: {
+                        email: {
+                            required: true,
+                        },
+                        password: {
+                            required: true,
+                        }
+                    },
+                    messages: {
+                        email: {
+                            required: "이메일 주소를 입력하세요",
+                        },
+                        password: {
+                            required: "패스워드를 입력하세요"
+                        }
+                    },
+                    errorElement: 'span',
+                    errorPlacement: function (error, element) {
+                        error.addClass('invalid-feedback');
+                        element.closest('.input-group').append(error);
+                    },
+                    highlight: function (element, errorClass, validClass) {
+                        $(element).addClass('is-invalid');
+                    },
+                    unhighlight: function (element, errorClass, validClass) {
+                        $(element).removeClass('is-invalid');
+                    }
+                });
+            });
+        </script>
+    </body>
+
+</html>

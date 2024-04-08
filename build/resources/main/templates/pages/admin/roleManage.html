@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CodehowsSMP | 권한 관리</title>
+  <!-- Google Font: Source Sans Pro -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:300,400,400i,700&display=fallback">
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="/plugins/fontawesome-free/css/all.min.css">
+  <!-- Theme style -->
+  <link rel="stylesheet" href="/dist/css/adminlte.min.css">
+</head>
+<body class="hold-transition login-page">
+<div class="login-box">
+  <div class="login-logo">
+    <b>CODEHOWS </b>SMP
+  </div>
+  <!-- /.login-logo -->
+  <div class="card">
+    <form role="form" id="roleForm" action="/member/roles" method="post">
+      <div class="card-body login-card-body">
+        <p class="login-box-msg">권한 관리 페이지</p>
+        <div class="form-group" th:each="m, mStat : ${members}">
+          <div class="row mb-3">
+            <div class="col-sm-6 d-flex justify-content-center">
+              <label class="m-auto" th:text="${m.name}"></label>
+            </div>
+            <div class="col-sm-6">
+              <select class="form-control selectRole" th:data-email="${m.email}" style="width: 100%;">
+                <option th:value="${USER}" th:selected="${m.role} == ${USER}">일반</option>
+                <option th:value="${ADMIN}" th:selected="${m.role} == ${ADMIN}">관리자</option>
+              </select>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- /.login-card-body -->
+      <div class="card-footer">
+        <button type="button" class="btn btn-secondary float-right" onclick="submitRoles()">제출</button>
+      </div>
+    </form>
+  </div>
+</div>
+<!-- /.login-box -->
+
+<!-- jQuery -->
+<script src="/plugins/jquery/jquery.min.js"></script>
+<!-- Bootstrap 4 -->
+<script src="/plugins/bootstrap/js/bootstrap.bundle.min.js"></script>
+<!-- AdminLTE App -->
+<script src="/dist/js/adminlte.min.js"></script>
+<!-- jquery-validation -->
+<script src="/plugins/jquery-validation/jquery.validate.min.js"></script>
+<script src="/plugins/jquery-validation/additional-methods.min.js"></script>
+<script>
+  function submitRoles() {
+    var roles = [];
+    $('.selectRole option:selected').each((index, item) => {
+      roles.push({
+        "email" : $(item).parent().data('email'),
+        "role" : item.value,
+      })
+    });
+    $.ajax({
+      contentType: 'application/json;charset=UTF-8',
+      type: "PATCH",
+      //비동기 false - 동기화된 전송 - 해당 전송 및 처리가 끝나야 다음 동작 수행
+      async: false,
+      url: "/member/roles",
+      data: JSON.stringify(roles),
+      dataType: "json",
+      cache   : false,
+      success: function () {
+        location.replace("/");
+      },
+      error : function(jqXHR){
+        if(jqXHR.status == '401'){
+          alert('로그인 후 이용해주세요');
+          location.replace('/member/login');
+        } else if(jqXHR.status == '403'){
+          alert('해당 권한이 없습니다.');
+          location.replace('/');
+        } else {
+          alert(jqXHR.responseText);
+        }
+      }
+    });
+  }
+</script>
+</body>
+
+</html>

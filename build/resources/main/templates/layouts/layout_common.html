@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout">
+<head>
+  <meta charset="utf-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CodehowsSMP</title>
+  <th:block th:replace="fragments/config :: configFragment"></th:block>
+  <th:block layout:fragment="css"></th:block>
+</head>
+
+<body class="hold-transition sidebar-mini layout-fixed">
+  <div class="wrapper">
+    <th:block th:replace="fragments/header :: headerFragment"></th:block>
+    <th:block th:replace="fragments/sidebar :: sidebarFragment"></th:block>
+    <th:block layout:fragment="content"></th:block>
+    <th:block th:replace="fragments/footer :: footerFragment"></th:block>
+  </div>
+  <th:block th:replace="fragments/jsimport :: jsimportFragment"></th:block>
+  <th:block layout:fragment="script"></th:block>
+</body>
+</html>

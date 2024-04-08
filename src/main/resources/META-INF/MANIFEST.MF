@@ -1,0 +1,46 @@
+Manifest-Version: 1.0
+Main-Class: com.codehows.smp.SmpApplication
+Class-Path: HikariCP-4.0.3.jar validation-api-2.0.1.Final.jar ognl-3.1.2
+ 6.jar spring-security-oauth2-jose-5.7.8.jar spring-boot-starter-thymele
+ af-2.7.12.jar spring-security-crypto-5.7.8.jar jakarta.persistence-api-
+ 2.2.3.jar byte-buddy-1.12.23.jar jakarta.annotation-api-1.3.5.jar thyme
+ leaf-3.0.15.RELEASE.jar spring-aop-5.3.27.jar nimbus-jose-jwt-9.22.jar 
+ asm-9.3.jar querydsl-apt-5.0.0.jar spring-boot-starter-web-2.7.12.jar j
+ akarta.transaction-api-1.3.3.jar hibernate-core-5.6.15.Final.jar thymel
+ eaf-layout-dialect-3.0.0.jar jakarta.validation-api-2.0.2.jar json-smar
+ t-2.4.11.jar txw2-2.3.8.jar log4j-api-2.17.2.jar javassist-3.20.0-GA.ja
+ r hibernate-validator-6.2.5.Final.jar javax.inject-1.jar spring-boot-st
+ arter-json-2.7.12.jar thymeleaf-expression-processor-3.0.0.jar content-
+ type-2.2.jar log4j-to-slf4j-2.17.2.jar thymeleaf-spring5-3.0.15.RELEASE
+ .jar spring-boot-starter-tomcat-2.7.12.jar spring-boot-starter-2.7.12.j
+ ar spring-webmvc-5.3.27.jar spring-web-5.3.27.jar spring-beans-5.3.27.j
+ ar spring-security-config-5.7.8.jar classmate-1.5.1.jar aspectjweaver-1
+ .9.7.jar jackson-datatype-jdk8-2.13.5.jar querydsl-codegen-5.0.0.jar sl
+ f4j-api-1.7.36.jar attoparser-2.0.5.RELEASE.jar jboss-logging-3.4.3.Fin
+ al.jar spring-boot-2.7.12.jar spring-data-commons-2.7.12.jar spring-boo
+ t-starter-data-jpa-2.7.12.jar jackson-module-parameter-names-2.13.5.jar
+  spring-aspects-5.3.27.jar spring-context-5.3.27.jar spring-expression-
+ 5.3.27.jar querydsl-jpa-5.0.0.jar antlr-2.7.7.jar unbescape-1.1.6.RELEA
+ SE.jar spring-tx-5.3.27.jar jandex-2.4.2.Final.jar spring-boot-starter-
+ oauth2-client-2.7.12.jar tomcat-embed-websocket-9.0.75.jar jakarta.acti
+ vation-1.2.2.jar spring-boot-starter-aop-2.7.12.jar groovy-extensions-1
+ .1.0.jar mysema-commons-lang-0.2.4.jar jakarta.xml.bind-api-2.3.3.jar i
+ stack-commons-runtime-3.0.12.jar logback-classic-1.2.12.jar thymeleaf-e
+ xtras-java8time-3.0.4.RELEASE.jar spring-security-core-5.7.8.jar jcip-a
+ nnotations-1.0-1.jar groovy-3.0.17.jar spring-jdbc-5.3.27.jar jul-to-sl
+ f4j-1.7.36.jar accessors-smart-2.4.11.jar tomcat-embed-el-9.0.75.jar sp
+ ring-security-oauth2-client-5.7.8.jar logback-core-1.2.12.jar spring-bo
+ ot-starter-security-2.7.12.jar spring-boot-autoconfigure-2.7.12.jar spr
+ ing-data-jpa-2.7.12.jar ecj-3.26.0.jar gson-2.8.7.jar spring-boot-start
+ er-data-jdbc-2.7.12.jar spring-data-jdbc-2.4.12.jar spring-orm-5.3.27.j
+ ar lang-tag-1.6.jar spring-data-relational-2.4.12.jar commons-io-2.11.0
+ .jar jackson-annotations-2.13.5.jar spring-boot-starter-logging-2.7.12.
+ jar jackson-core-2.13.5.jar querydsl-core-5.0.0.jar spring-security-oau
+ th2-core-5.7.8.jar tomcat-embed-core-9.0.75.jar modelmapper-2.4.2.jar s
+ pring-boot-starter-jdbc-2.7.12.jar jackson-databind-2.13.5.jar spring-s
+ ecurity-web-5.7.8.jar mysql-connector-j-8.0.33.jar jackson-datatype-jsr
+ 310-2.13.5.jar hibernate-commons-annotations-5.1.2.Final.jar spring-jcl
+ -5.3.27.jar snakeyaml-1.30.jar jaxb-runtime-2.3.8.jar oauth2-oidc-sdk-9
+ .35.jar spring-core-5.3.27.jar thymeleaf-extras-springsecurity5-3.0.5.R
+ ELEASE.jar classgraph-4.8.108.jar codegen-utils-5.0.0.jar
+

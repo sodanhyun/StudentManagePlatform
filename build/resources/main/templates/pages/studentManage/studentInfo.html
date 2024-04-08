@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:layout="http://www.ultraq.net.nz/thymeleaf/layout"
+      layout:decorate="~{layouts/layout_common}">
+
+<!--현재 페이지에서 쓰이는 스크립트-->
+<th:block layout:fragment="script">
+  <!-- DataTables  & Plugins -->
+  <script src="/plugins/datatables/jquery.dataTables.min.js"></script>
+  <script src="/plugins/datatables-bs4/js/dataTables.bootstrap4.min.js"></script>
+  <script src="/plugins/datatables-responsive/js/dataTables.responsive.min.js"></script>
+  <script src="/plugins/datatables-responsive/js/responsive.bootstrap4.min.js"></script>
+  <script src="/plugins/datatables-buttons/js/dataTables.buttons.min.js"></script>
+  <script src="/plugins/datatables-buttons/js/buttons.bootstrap4.min.js"></script>
+  <script src="/plugins/jszip/jszip.min.js"></script>
+  <script src="/plugins/pdfmake/pdfmake.min.js"></script>
+  <script src="/plugins/pdfmake/vfs_fonts.js"></script>
+  <script src="/plugins/datatables-buttons/js/buttons.html5.min.js"></script>
+  <script src="/plugins/datatables-buttons/js/buttons.print.min.js"></script>
+  <script src="/plugins/datatables-buttons/js/buttons.colVis.min.js"></script>
+  <!-- InputMask -->
+  <script src="/plugins/moment/moment.min.js"></script>
+  <script src="/plugins/inputmask/jquery.inputmask.min.js"></script>
+  <!-- jquery-validation -->
+  <script src="/plugins/jquery-validation/jquery.validate.min.js"></script>
+  <script src="/plugins/jquery-validation/additional-methods.min.js"></script>
+  <!-- SweetAlert2 -->
+  <script src="/plugins/sweetalert2/sweetalert2.min.js"></script>
+  <!-- Toastr -->
+  <script src="/plugins/toastr/toastr.min.js"></script>
+
+<!--  컴포넌트의 동작에 필요한 인라인 스크립트-->
+  <script th:inline="javascript">
+    $(function () {
+      $("#example1").DataTable({
+        "responsive": true, "lengthChange": false, "autoWidth": false,
+        "buttons": ["copy", "excel", "pdf", "print", "colvis"]
+      }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+    });
+    $('[data-mask]').inputmask()
+    $("#startDate").inputmask({
+      mask: '9999-99-99',
+      placeholder: ' ',
+      allowMinus: false,
+    })
+    //수정 삭제 버튼 토글
+    $(function() {
+      $("#updateToggle").on("click", function() {
+        $(".updateBtn").toggle("show");
+      })
+    })
+    $(function() {
+      $("#deleteToggle").on("click", function() {
+        $(".deleteBtn").toggle("show");
+      })
+    })
+    // 학생 추가 validation + Ajax 통신
+    $(function () {
+      $.validator.setDefaults({
+        //validation이 통과하면 ajax통신 시작
+        submitHandler: function() {
+          var studentDto = {
+            id:$('#studentId').val(),
+            name:$('#exampleInputBorderWidth2_1').val(),
+            birth:$('#exampleInputBorderWidth2_0').val(),
+            email:$('#emailData').val(),
+            phone:$('#phoneData').val(),
+            classAB:$('#exampleSelectBorderWidth2_1').val(),
+            residence:$('#exampleInputBorderWidth2_2').val(),
+            belong:$('#exampleInputBorderWidth2_3').val(),
+            major:$('#exampleInputBorderWidth2_4').val(),
+            graduate:$('#exampleSelectBorderWidth2').val(),
+            start:$('#startDate').val(),
+            status: true,
+            note:""
+          };
+          $.ajax({
+            url: "/student/info",
+            type: "POST",
+            async: true,
+            contentType: "application/json;charset=UTF-8",
+            data: JSON.stringify(studentDto),
+            dataType : "json",
+            cache   : false,
+            success  : function(){
+              //통신이 성공하면 모달 폼 닫기
+              $('div.modal').modal('hide');
+              if($('.modal-title').text()=='학생 정보 수정') {
+                toastInfo('success', '수정이 완료되었습니다.');
+              }else if($('.modal-title').text()=='학생 정보 추가') {
+                toastInfo('success', '추가가 완료되었습니다.');
+              }
+              refreshTable();
+            },
+            error : function(jqXHR){
+              if(jqXHR.status == '401'){
+                alert('로그인 후 이용해주세요');
+                location.replace('/member/login');
+              } else if(jqXHR.status == '403'){
+                alert('해당 권한이 없습니다.');
+                location.replace('/');
+              } else {
+                alert(jqXHR.responseText);
+              }
+            }
+          });
+        }
+      });
+      //validation
+      $('#addStudent').validate({
+        rules: {
+          email: {
+            required: true,
+            email: true,
+          },
+          name: {
+            required: true
+          },
+          birth: {
+            required: true,
+            minlength: 6,
+            maxlength: 6,
+          },
+          phone: {
+            required: true
+          },
+          start: {
+            required: true
+          }
+        },
+        messages: {
+          email: {
+            required: "이메일 주소를 입력하세요",
+            email: "올바른 이메일 주소를 입력하세요"
+          },
+          name: {
+            required: "성명을 입력하세요"
+          },
+          birth: {
+            required: "생년월일을 입력하세요",
+            minlength: "6자리보다 적습니다.",
+            maxlength: "6자리보다 많습니다."
+          },
+          phone: {
+            required: "연락처를 입력하세요"
+          },
+          start: {
+            required: "수강시작일을 입력하세요"
+          }
+        },
+        errorElement: 'span',
+        errorPlacement: function (error, element) {
+          error.addClass('invalid-feedback');
+          element.closest('.form-group').append(error);
+        },
+        highlight: function (element, errorClass, validClass) {
+          $(element).addClass('is-invalid');
+        },
+        unhighlight: function (element, errorClass, validClass) {
+          $(element).removeClass('is-invalid');
+        }
+      });
+    });
+    function toastInfo(icon, title) {
+      Swal.mixin({
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000
+      }).fire({
+        icon: icon,
+        title: title,
+      })
+    }
+    function refreshTable() {
+      $.ajax({
+        url: "/student/info/refresh",
+        type: "POST",
+        async: true,
+        dataType : "html",
+        cache   : false,
+        success  : function(data){
+          refreshBody(data);
+        },
+        error : function(jqXHR){
+          if(jqXHR.status == '401'){
+            alert('로그인 후 이용해주세요');
+            location.replace('/member/login');
+          } else if(jqXHR.status == '403'){
+            alert('해당 권한이 없습니다.');
+            location.replace('/');
+          } else {
+            alert(jqXHR.responseText);
+          }
+        }
+      });
+    }
+    function refreshBody(data) {
+      $('#example1_wrapper').remove();
+      $('#refreshBody').append(data);
+      $("#example1").DataTable({
+        "responsive": true, "lengthChange": false, "autoWidth": false,
+        "buttons": ["copy", "excel", "pdf", "print", "colvis"]
+      }).buttons().container().appendTo('#example1_wrapper .col-md-6:eq(0)');
+    }
+    //학생 추가
+    function insertModal(){
+      $('.modal-title').text('학생 정보 추가');
+      initModal(null);
+      $('div.modal').modal();
+    }
+    function initModal(data) {
+      if(data==null) {
+        $('#studentId').val('');
+        $('#exampleInputBorderWidth2_1').val('');
+        $('#exampleInputBorderWidth2_0').val('');
+        $('#phoneData').val('');
+        $('#emailData').val('');
+        $('#exampleInputBorderWidth2_2').val('');
+        $('#exampleInputBorderWidth2_3').val('');
+        $('#exampleInputBorderWidth2_4').val('');
+        $('#exampleSelectBorderWidth2').val('');
+        $('#exampleSelectBorderWidth2_1').val('');
+        $('#startDate').val('');
+      }else {
+        $('#studentId').val(data.id);
+        $('#exampleInputBorderWidth2_1').val(data.name);
+        $('#exampleInputBorderWidth2_0').val(data.birth);
+        $('#phoneData').val(data.phone);
+        $('#emailData').val(data.email);
+        $('#exampleInputBorderWidth2_2').val(data.residence);
+        $('#exampleInputBorderWidth2_3').val(data.belong);
+        $('#exampleInputBorderWidth2_4').val(data.major);
+        $('#exampleSelectBorderWidth2').val(data.graduate);
+        $('#exampleSelectBorderWidth2_1').val(data.classAB);
+        $('#startDate').val(data.start);
+      }
+    }
+    //학생 수정
+    function updateModal(obj){
+      var id = obj.dataset.id;
+      var url = "/student/info/" + id;
+      $.ajax({
+        url: url,
+        type: "GET",
+        dataType : "json",
+        cache   : false,
+        success  : function(data){
+          $('.modal-title').text('학생 정보 수정');
+          initModal(data);
+          $('div.modal').modal();
+        },
+        error : function(jqXHR){
+          if(jqXHR.status == '401'){
+            alert('로그인 후 이용해주세요');
+            location.replace('/member/login');
+          } else if(jqXHR.status == '403'){
+            alert('해당 권한이 없습니다.');
+            location.replace('/');
+          } else {
+            alert(jqXHR.responseText);
+          }
+        }
+      });
+    }
+    //학생 삭제
+    function deleteStudent(obj){
+      var id = obj.dataset.id;
+      // var token = $("meta[name='_csrf']").attr("content");
+      // var header = $("meta[name='_csrf_header']").attr("content");
+      var url = "/student/info/" + id;
+      $.ajax({
+        url      : url,
+        type     : "DELETE",
+        // beforeSend : function(xhr){
+        //   /* 데이터를 전송하기 전에 헤더에 csrf값을 설정 */
+        //   xhr.setRequestHeader(header, token);
+        // },
+        dataType : "json",
+        cache   : false,
+        success  : function(){
+          refreshTable();
+          toastInfo('success', '삭제가 완료되었습니다')
+        },
+        error : function(jqXHR){
+          if(jqXHR.status == '401'){
+            alert('로그인 후 이용해주세요');
+            location.replace('/member/login');
+          } else if(jqXHR.status == '403'){
+            alert('해당 권한이 없습니다.');
+            location.replace('/');
+          } else {
+            alert(jqXHR.responseText);
+          }
+        }
+      });
+    }
+
+    function getClassInfo(classAB) {
+      $.ajax({
+        url: "/student/filter/" + classAB,
+        type: "POST",
+        async: true,
+        dataType : "html",
+        cache   : false,
+        success  : function(data){
+          refreshBody(data);
+        },
+        error : function(jqXHR){
+          if(jqXHR.status == '401'){
+            alert('로그인 후 이용해주세요');
+            location.replace('/member/login');
+          } else if(jqXHR.status == '403'){
+            alert('해당 권한이 없습니다.');
+            location.replace('/');
+          } else {
+            alert(jqXHR.responseText);
+          }
+        }
+      });
+    }
+
+  </script>
+</th:block>
+
+<!--현재 페이지에서 쓰이는 스타일시트-->
+<th:block layout:fragment="css">
+  <!-- DataTables -->
+  <link rel="stylesheet" href="/plugins/datatables-bs4/css/dataTables.bootstrap4.min.css">
+  <link rel="stylesheet" href="/plugins/datatables-responsive/css/responsive.bootstrap4.min.css">
+  <link rel="stylesheet" href="/plugins/datatables-buttons/css/buttons.bootstrap4.min.css">
+  <!-- SweetAlert2 -->
+  <link rel="stylesheet" href="/plugins/sweetalert2-theme-bootstrap-4/bootstrap-4.min.css">
+  <!-- Toastr -->
+  <link rel="stylesheet" href="/plugins/toastr/toastr.min.css">
+</th:block>
+
+<th:block layout:fragment="content">
+  <div class="content-wrapper">
+    <!-- Content Header (Page header) -->
+    <section class="content-header">
+      <div class="container-fluid">
+        <div class="row mb-2">
+          <div class="col-sm-6">
+            <h1>학생 정보 조회/관리</h1>
+          </div>
+          <div class="col-sm-6">
+            <ol class="breadcrumb float-sm-right">
+              <li class="breadcrumb-item"><a href="#">홈</a></li>
+              <li class="breadcrumb-item active">학생 정보 조회/관리</li>
+            </ol>
+          </div>
+        </div>
+      </div><!-- /.container-fluid -->
+    </section>
+    <!-- Main content -->
+    <section class="content">
+      <div class="container-fluid">
+        <div class="row">
+          <div class="col-12">
+            <div class="card" id="my-card">
+              <div class="card-header">
+                <h3 class="card-title">학생 정보</h3>
+              </div>
+              <!-- /.card-header -->
+              <div class="card-body" id="refreshBody">
+                <div class="btn-group float-left">
+                  <button type="button" class="btn btn-default" onclick="getClassInfo('A')">A반</button>
+                  <button type="button" class="btn btn-default" onclick="getClassInfo('B')">B반</button>
+                  <button type="button" class="btn btn-default" onclick="refreshTable()">전체</button>
+                </div>
+                <div class="btn-group float-left pl-2">
+                  <button type="button" id="updateToggle" class="btn btn-info">수정</button>
+                  <button type="button" class="btn btn-info" onclick="insertModal()">추가</button>
+                  <button type="button" id="deleteToggle" class="btn btn-info">삭제</button>
+                </div>
+<!--                <button type="button" class="btn btn-primary float-right" data-card-widget="card-refresh" data-source="/student/info/refresh">Refresh</button>-->
+                <!--    학생 정보 조회 테이블-->
+                <table id="example1" class="table table-bordered table-striped table-hover">
+                  <thead>
+                  <tr>
+                    <th class="text-center">성명</th>
+                    <th>생년월일</th>
+                    <th>연락처</th>
+                    <th>구분</th>
+                    <th>거주지</th>
+                    <th>소속</th>
+                    <th>전공</th>
+                    <th>이메일</th>
+                    <th>비고</th>
+                  </tr>
+                  </thead>
+                  <tbody>
+                  <tr th:each="student : ${studentDtoList}" >
+                    <td class="text-center">
+                      <button type="button" class="float-left updateBtn" style="border: none; display: none; background-color: transparent;">
+                        <span th:data-id="${student.id}" onclick="updateModal(this)"><i class="fas fa-pen"></i></span></button>
+                      <button type="button" class="float-right deleteBtn" style="border: none; display: none; background-color: transparent;">
+                        <span th:data-id="${student.id}" onclick="deleteStudent(this)"><i class="fas fa-trash-alt"></i></span></button>
+                      <span th:text="${student.name}"></span>
+                    </td>
+                    <td><span th:text="${student.birth}"></span></td>
+                    <td><span th:text="${student.phone}"></span></td>
+                    <td><span th:text="${student.classAB}"></span></td>
+                    <td><span th:text="${student.residence}"></span></td>
+                    <td><span th:text="${student.belong}"></span></td>
+                    <td><span th:text="${student.major}"></span></td>
+                    <td><span th:text="${student.email}"></span></td>
+                    <td><span th:text="${student.note}"></span></td>
+                  </tr>
+                  </tbody>
+                  <tfoot>
+                  <tr>
+                    <th class="text-center">성명</th>
+                    <th>생년월일</th>
+                    <th>연락처</th>
+                    <th>구분</th>
+                    <th>거주지</th>
+                    <th>소속</th>
+                    <th>전공</th>
+                    <th>이메일</th>
+                    <th>비고</th>
+                  </tr>
+                  </tfoot>
+                </table>
+              </div>
+              <!-- /.card-body -->
+            </div>
+            <!-- /.card -->
+          </div>
+          <!-- /.col -->
+        </div>
+        <!-- /.row -->
+      </div>
+      <!-- /.container-fluid -->
+
+<!--      학생 추가 폼 모달-->
+      <div class="modal fade" id="modal-default">
+        <div class="modal-dialog">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h4 class="modal-title">학생 정보 추가</h4>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+
+<!--              학생 정보 입력 폼-->
+              <form id="addStudent" method="post" onsubmit="return false;">
+                <input type="hidden" name="id" id="studentId">
+                <div class="form-group">
+                  <label for="exampleInputBorderWidth2_1">성명</label>
+                  <input type="text" name="name" class="form-control form-control-border border-width-2" id="exampleInputBorderWidth2_1" placeholder="이름을 입력하세요">
+                </div>
+                <div class="form-group">
+                  <label for="exampleInputBorderWidth2_0">생년월일(6자리)</label>
+                  <input type="text" name="birth" class="form-control form-control-border border-width-2" id="exampleInputBorderWidth2_0" placeholder="생년월일을 입력하세요">
+                </div>
+                <div class="input-group mb-3">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text"><i class="fas fa-envelope"></i></span>
+                  </div>
+                  <input type="email" name="email" class="form-control" id="emailData" placeholder="Email">
+                </div>
+                <div class="input-group mb-3">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text"><i class="fas fa-phone"></i></span>
+                  </div>
+                  <input type="text" name="phone" class="form-control" id="phoneData" placeholder="Phone" data-inputmask='"mask": "999-9999-9999"' data-mask>
+                </div>
+                <div class="input-group mb-3">
+                  <div class="input-group-prepend">
+                    <span class="input-group-text"><i class="far fa-calendar-alt"></i></span>
+                  </div>
+                  <input type="text" name="start" id="startDate" class="form-control" placeholder="수강시작일을 입력하세요">
+                </div>
+                <div class="form-group" style="padding-top: 13px">
+                  <label for="exampleInputBorderWidth2_2">거주지</label>
+                  <input type="text"  class="form-control form-control-border border-width-2" id="exampleInputBorderWidth2_2" placeholder="지역을 입력하세요">
+                </div>
+                <div class="form-group">
+                  <label for="exampleInputBorderWidth2_3">소속</label>
+                  <input type="text" class="form-control form-control-border border-width-2" id="exampleInputBorderWidth2_3" placeholder="대학을 입력하세요">
+                </div>
+                <div class="form-group">
+                  <label for="exampleInputBorderWidth2_4">전공</label>
+                  <input type="text" class="form-control form-control-border border-width-2" id="exampleInputBorderWidth2_4" placeholder="학과를 입력하세요">
+                </div>
+                <div class="form-group">
+                  <label for="exampleSelectBorderWidth2">최종 학력</label>
+                  <select class="custom-select form-control-border border-width-2" id="exampleSelectBorderWidth2" name="graduate">
+                    <option value="">-선택하세요-</option>
+                    <option>중졸</option>
+                    <option>고졸</option>
+                    <option>재학중</option>
+                    <option>휴학중</option>
+                    <option>대졸</option>
+                    <option>알수없음</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label for="exampleSelectBorderWidth2_1">구분</label>
+                  <select class="custom-select form-control-border border-width-2" id="exampleSelectBorderWidth2_1" name="classAB">
+                    <option value="">-선택하세요-</option>
+                    <option>A</option>
+                    <option>B</option>
+                    <option>미정</option>
+                  </select>
+                </div>
+              </form>
+<!--              학생정보 입력 폼 끝-->
+
+<!--              모달 버튼-->
+            </div>
+            <div class="modal-footer justify-content-between">
+              <button type="button" class="btn btn-default" data-dismiss="modal">닫기</button>
+              <button type="submit" class="btn btn-primary btnSave" form="addStudent">저장</button>
+            </div>
+          </div>
+          <!-- /.modal-content -->
+        </div>
+        <!-- /.modal-dialog -->
+      </div>
+      <!-- /.modal -->
+
+    </section>
+    <!-- /.content -->
+  </div>
+
+</th:block>
+</html>
